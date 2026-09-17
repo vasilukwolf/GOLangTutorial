@@ -24,7 +24,6 @@ func accessControl(params AccessParams) {
 	} else if params.IsPremium {
 		fmt.Println("Приятного просмотра")
 	}
-	fmt.Println("Access Granted: User has access.")
 }
 
 func main() {
