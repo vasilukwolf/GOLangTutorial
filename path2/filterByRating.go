@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func filterByRating(rating []float64, min float64) []float64 {
-	result := []float64{}
+	result := make([]float64, 0, len(rating))
 	for _, r := range rating {
 		if r >= min {
 			result = append(result, r)
