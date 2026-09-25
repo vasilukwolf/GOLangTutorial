@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-func countChairs(s []string) map[rune]int {
+func countChars(s string) map[rune]int {
 	counts := make(map[rune]int)
 	for _, char := range s {
 		counts[char]++
@@ -12,6 +12,8 @@ func countChairs(s []string) map[rune]int {
 
 func main() {
 	s := "hello world"
-	result := countChairs(s)
-	fmt.Println(result)
+	result := countChars(s)
+	for char, count := range result {
+		fmt.Printf("%c: %d\n", char, count)
+	}
 }
