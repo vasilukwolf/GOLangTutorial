@@ -3,41 +3,52 @@ package main
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
-var userData = map[string]string{
-	"user1": "24-08-1989",
-	"user2": "12-05-1995",
-	"user3": "30-11-2000",
+var ErrUserNotFound = errors.New("user not found")
+
+type ValidtionError struct {
+	Field string
+	Value string
 }
 
-func checkUserAndData(userID string, userDate string, userData map[string]string) (bool, error) {
-	// Check if the user exists in the database
-	userExists := false
-	for id := range userData {
-		if id == userID {
-			userExists = true
-		}
+func (e *ValidtionError) Error() string {
+	return fmt.Sprintf("validation error: field=%s value=%s", e.Field, e.Value)
+}
+
+func ParseExpiry(input string) (time.Time, error) {
+	t, err := time.Parse("2006-01-02", input)
+	if err != nil {
+		return time.Time{}, &ValidtionError{Field: "expiresAt", Value: input}
 	}
 
-	dataExists := false
-	for _, date := range userData {
-		if date == userDate {
-			dataExists = true
-			break
-		}
+	return t, nil
+}
+
+func ActivateSubscription(userID int, expiresAt string) error {
+	if userID > 1 {
+		return fmt.Errorf("activate subsctiption: %w", ErrUserNotFound)
 	}
 
-	if !userExists {
-		return false, errors.New(fmt.Sprintf("Данного пользователя не найдено %s", userID))
+	if _, err := ParseExpiry(expiresAt); err != nil {
+		return fmt.Errorf("activate subsctiption: %w", err)
 	}
-	if !dataExists {
-		return false, errors.New(fmt.Sprintf("Данной даты не найдено %s", userDate))
-	}
-	return true, nil
+	return nil
 }
 
 func main() {
-	fmt.Print(checkUserAndData("user1", "24-08-1989", userData))
-	fmt.Print(checkUserAndData("user1", "24-08-1976", userData))
+	err := ActivateSubscription(0, "2026-12-31")
+	fmt.Println(errors.Is(err, ErrUserNotFound))
+
+	err = ActivateSubscription(2, "2006-01-02")
+	fmt.Println(errors.Is(err, ErrUserNotFound))
+
+	err = ActivateSubscription(1, "not-a-date")
+	var ve *ValidtionError
+	if errors.As(err, &ve) {
+		fmt.Printf("%s=%s\n", ve.Field, ve.Value)
+
+	}
+
 }
