@@ -17,43 +17,43 @@ func trackTime(start time.Time, name string) {
 	fmt.Printf("%s: %v\n", name, time.Since(start).Round(time.Millisecond))
 }
 
-func loadCatalog(files []string) (Movies []Movie) {
+func loadCatalog(files []string) ([]Movie, error) {
+	defer trackTime(time.Now(), "loadCatalog")
+	var all []Movie
 	for _, file := range files {
-		Movies = append(Movies, readJSONcatlog(file)...)
+		movies, err := loadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, movies...)
 	}
-	return Movies
+	return all, nil
 }
 
-func readJSONcatlog(file string) []Movie {
-	defer trackTime(time.Now(), "readJSONcatlog")
-	time.Sleep(80 * time.Microsecond)
+func loadFile(file string) ([]Movie, error) {
+	defer trackTime(time.Now(), file)
 	jsonFile, err := os.Open(file)
-	fmt.Println("Successfully Opened %s", file)
 	if err != nil {
-		fmt.Println("Error opening JSON file:", err)
-		return nil
+		return nil, fmt.Errorf("open %s: %w", file, err)
 	}
-
 	defer jsonFile.Close()
+	fmt.Printf("Successfully opened %s\n", file)
 
 	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return nil
+		return nil, fmt.Errorf("read %s: %w", file, err)
 	}
 
 	var films []Movie
-
 	err = json.Unmarshal(byteValue, &films)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return nil
+		return nil, fmt.Errorf("parse %s: %w", file, err)
 	}
 
-	return films
+	return films, nil
 }
 
 func main() {
 	files := []string{"./path3/JSON/movies_valid.json", "./path3/JSON/movies_broken.json", "./path3/JSON/movies_empty.json"}
-	fmt.Println(loadCatalog(files))
+	loadCatalog(files)
 }
