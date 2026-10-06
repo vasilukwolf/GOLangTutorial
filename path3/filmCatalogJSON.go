@@ -2,10 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
+)
+
+var (
+	ErrIsPanic        = errors.New("panic occurred")
+	ErrInvalidContent = errors.New("invalid content")
 )
 
 type Movie struct {
@@ -23,6 +30,9 @@ func loadCatalog(files []string) ([]Movie, error) {
 	for _, file := range files {
 		movies, err := loadFile(file)
 		if err != nil {
+			if errors.Is(err, ErrInvalidContent) {
+				continue
+			}
 			return nil, err
 		}
 		all = append(all, movies...)
@@ -30,14 +40,24 @@ func loadCatalog(files []string) ([]Movie, error) {
 	return all, nil
 }
 
-func loadFile(file string) ([]Movie, error) {
+func loadFile(file string) (movies []Movie, err error) {
 	defer trackTime(time.Now(), file)
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			movies = nil
+			err = fmt.Errorf("%w: %s: %v", ErrIsPanic, file, recovered)
+		}
+	}()
+
+	if strings.Contains(file, "panic") {
+		panic("Паника в файле" + file)
+	}
+
 	jsonFile, err := os.Open(file)
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", file, err)
 	}
 	defer jsonFile.Close()
-	fmt.Printf("Successfully opened %s\n", file)
 
 	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
@@ -47,13 +67,12 @@ func loadFile(file string) ([]Movie, error) {
 	var films []Movie
 	err = json.Unmarshal(byteValue, &films)
 	if err != nil {
-		return nil, fmt.Errorf("parse %s: %w", file, err)
+		return nil, fmt.Errorf("%w: parse %s: %w", ErrInvalidContent, file, err)
 	}
-
 	return films, nil
 }
 
 func main() {
-	files := []string{"./path3/JSON/movies_valid.json", "./path3/JSON/movies_broken.json", "./path3/JSON/movies_empty.json"}
-	loadCatalog(files)
+	files := []string{"./testdata/movies_valid.json", "./testdata/movies_broken.json", "./testdata/movies_empty.json"}
+	fmt.Println(loadCatalog(files))
 }
