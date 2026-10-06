@@ -73,6 +73,6 @@ func loadFile(file string) (movies []Movie, err error) {
 }
 
 func main() {
-	files := []string{"./testdata/movies_valid.json", "./testdata/movies_broken.json", "./testdata/movies_empty.json"}
+	files := []string{"./path3/JSON/movies_valid.json", "./path3/JSON/movies_broken.json", "./path3/JSON/movies_empty.json"}
 	fmt.Println(loadCatalog(files))
 }
