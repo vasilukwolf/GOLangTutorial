@@ -6,40 +6,47 @@ type Favorite struct {
 	Title []string
 }
 
-func Add(favorite *Favorite, title string) {
-	favorite.Title = append(favorite.Title, title)
+func (f *Favorite) Add(title string) {
+	f.Title = append(f.Title, title)
 }
 
-func PrintAll(favorite *Favorite) []string {
-	return favorite.Title
+func (f Favorite) PrintAll() {
+	fmt.Println("All favorite titles:")
+	for _, title := range f.Title {
+		fmt.Println(title)
+	}
 }
 
-func PrintUnique(favorite *Favorite) []string {
+func (f Favorite) PrintUnique() {
 	seen := make(map[string]struct{}) // создаём пустую map
 	unique := []string{}
 
-	for _, title := range favorite.Title {
+	for _, title := range f.Title {
 		if _, ok := seen[title]; ok {
 			continue // такое название уже было, пропускаем
 		}
 		seen[title] = struct{}{} // запоминаем название
 		unique = append(unique, title)
 	}
-	return unique
+
+	fmt.Println("Unique favorite titles:")
+	for _, title := range unique {
+		fmt.Println(title)
+	}
 }
 
 func main() {
 	fav := &Favorite{}
-	Add(fav, "Dark")
-	Add(fav, "Breaking Bad")
-	Add(fav, "Dark")
+	fav.Add("Dark")
+	fav.Add("Breaking Bad")
+	fav.Add("Dark")
 
 	summary := struct {
 		Owner      string
 		ItemsCount int
 	}{
 		Owner:      "Alice",
-		ItemsCount: len(PrintUnique(fav)),
+		ItemsCount: len(fav.Title),
 	}
 
 	fmt.Println(summary)         // {Alice 2}
